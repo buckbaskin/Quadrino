@@ -22,11 +22,14 @@ void setup() {
 void loop() {
   if (Serial.available()) {
     Serial.print("rcvd chars: ");
+    digitalWrite(led, HIGH);
     char ch = Serial.read();
-    while(ch != '\n') {
-      Serial.print(ch);
+    while(ch != '\n' && ch != '\xff') {
+      // Serial.print(ch);
+      delay(1000);
       ch = Serial.read();
     }
-    Serial.println(" and newline char");
+    digitalWrite(led, LOW);
+    Serial.println(" and send end");
   }
 }
