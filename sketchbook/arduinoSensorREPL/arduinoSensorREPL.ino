@@ -31,8 +31,5 @@ void loop() {
     }
     digitalWrite(led, LOW);
     Serial.println(" ;");
-  } else {
-    Serial.println("Arduino Ready");
-    delay(1000);
   }
 }
