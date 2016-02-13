@@ -95,7 +95,8 @@ int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag) {
 }
 
 int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag) {
-  Serial.println("Hold still, checking for bias");
+  Serial.println("Hold still on a level surface, checking for bias");
+  delay(1000);
   accel -> x = 0;
   accel -> y = 0;
   accel -> z = 0;
@@ -112,7 +113,7 @@ int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag) {
     accelu.getEvent(&event);
     accel -> x += event.acceleration.x;
     accel -> y += event.acceleration.y;
-    accel -> z += event.acceleration.z;
+    accel -> z += event.acceleration.z - 9.81;
     gyrou.getEvent(&event);
     gyro -> x += event.gyro.x;
     gyro -> y += event.gyro.y;
