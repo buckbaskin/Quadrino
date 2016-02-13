@@ -25,14 +25,15 @@ RotMatrix particles[10];
 void init_MCL_particles(RotMatrix * particles, int num_particles);
 void evolve_particle(RotMatrix * particle, Vector3 ctrl, float dt);
 void motion_model(RotMatrix* particles, int num_particles, Vector3 ctrl, float dt);
-void update_control(RotMatrix* particles, int num_particles);
+void update_control(RotMatrix* particles, int num_particles, float dt);
 void filter_particles(RotMatrix* particles, int particle_count);
+void publish_particles();
 float randomly(float mu, float sigma);
 Vector3 cross_product(Vector3 a, Vector3 b) {
   Vector3 bob;
-  bob.x = a.y*b.z-a.z*b*y;
-  bob.y = a.z*b.x-a.x*b*z;
-  bob.z = a.x*b.y-a.y*b*x;
+  bob.x = a.y*b.z-a.z*b.y;
+  bob.y = a.z*b.x-a.x*b.z;
+  bob.z = a.x*b.y-a.y*b.x;
   return bob;
 }
 float dot_product(Vector3 a, Vector3 b) {
@@ -79,8 +80,9 @@ void loop() {
     printVec(&accel);
     Serial.println(" m/s2");
     motion_model((RotMatrix*) particles, particle_count, gyro, 1.0/control_rate.hz());
-    // filter_particles((RotMatrix*) particles, particle_count);
+    filter_particles((RotMatrix*) particles, particle_count);
     update_control((RotMatrix*) particles, particle_count, 1.0/control_rate.hz());
+    publish_particles();
   }
 }
 
@@ -163,16 +165,35 @@ void filter_particles(RotMatrix* particles, int particle_count) {
     // calc grav, thrust vectors again
     dist = abs(dot_product(accel, unit(cross_product(grav, thrust))));
     if (dist > avg_dist) { // replace with the best option
-      *(particles+i)[0][0] = *(particles+min_dist_index)[0][0]+0.0
-      *(particles+i)[0][1] = *(particles+min_dist_index)[0][1]+0.0
-      *(particles+i)[0][2] = *(particles+min_dist_index)[0][2]+0.0
-      *(particles+i)[1][0] = *(particles+min_dist_index)[1][0]+0.0
-      *(particles+i)[1][1] = *(particles+min_dist_index)[1][1]+0.0
-      *(particles+i)[1][2] = *(particles+min_dist_index)[1][2]+0.0
-      *(particles+i)[2][0] = *(particles+min_dist_index)[2][0]+0.0
-      *(particles+i)[2][1] = *(particles+min_dist_index)[2][1]+0.0
-      *(particles+i)[2][2] = *(particles+min_dist_index)[2][2]+0.0
+      *(particles+i)[0][0] = *(particles+min_dist_index)[0][0]+0.0;
+      *(particles+i)[0][1] = *(particles+min_dist_index)[0][1]+0.0;
+      *(particles+i)[0][2] = *(particles+min_dist_index)[0][2]+0.0;
+      *(particles+i)[1][0] = *(particles+min_dist_index)[1][0]+0.0;
+      *(particles+i)[1][1] = *(particles+min_dist_index)[1][1]+0.0;
+      *(particles+i)[1][2] = *(particles+min_dist_index)[1][2]+0.0;
+      *(particles+i)[2][0] = *(particles+min_dist_index)[2][0]+0.0;
+      *(particles+i)[2][1] = *(particles+min_dist_index)[2][1]+0.0;
+      *(particles+i)[2][2] = *(particles+min_dist_index)[2][2]+0.0;
     }
   }
   // TODO(buckbaskin): check particles match against mag-level?
+}
+
+void publish_particles() {
+  RotMatrix avg;
+  for (int i = 0; i < particle_count; i++) {
+    avg[0][0] += *(particles+i)[0][0]+0.0;
+    avg[0][1] += *(particles+i)[0][1]+0.0;
+    avg[0][2] += *(particles+i)[0][2]+0.0;
+    avg[1][0] += *(particles+i)[1][0]+0.0;
+    avg[1][1] += *(particles+i)[1][1]+0.0;
+    avg[1][2] += *(particles+i)[1][2]+0.0;
+    avg[2][0] += *(particles+i)[2][0]+0.0;
+    avg[2][1] += *(particles+i)[2][1]+0.0;
+    avg[2][2] += *(particles+i)[2][2]+0.0;
+  }
+  for (int i = 0; i < 9; i++) {
+    Serial.print(avg[i]); Serial.print(",");
+  }
+  Serial.println("");
 }
