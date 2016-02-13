@@ -17,6 +17,16 @@ struct RotMatrix {
 };
 typedef struct RotMatrix  RotMatrix;
 
+struct Measurement {
+  Vector3 accel;
+  Vector3 gyro;
+  Vector3 mag;
+};
+typedef struct Measurement Measurement;
+
+// typedef float Covariance[9][9];
+typedef float BigMatrix[9][9];
+
 void printVec(Vector3 * input);
 
 #endif
