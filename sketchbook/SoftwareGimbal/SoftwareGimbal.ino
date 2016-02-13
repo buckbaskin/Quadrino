@@ -1,7 +1,7 @@
 #include <MatrixMath.h>
 #include <rate.h>
 #include "IMU_Types.h"
-// #include "IMU.h"
+#include "IMU.h"
 
 Rate slow(1.0); // do something on a slow count
 Rate imu_rate(5.0); // rate to poll IMU, hopefully will make this
@@ -10,6 +10,10 @@ Rate control_rate(100.0); // rate to update control feedback, probably won't mak
 int _pin = 13;
 int counter = 0;
 
+Vector3 accel;
+Vector3 gyro;
+Vector3 mag;
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -17,7 +21,7 @@ void setup() {
   Serial.println("");
   pinMode(_pin, OUTPUT);
   /* Initialise the sensors */
-  // initSensors();
+  init_sensors();
 }
 
 void loop() {
@@ -27,7 +31,7 @@ void loop() {
     // filter motion update();
   }
   if (imu_rate.q()) {
-    // poll_imu(accel struct*, gyro struct*, msg struct*)
+    poll_imu(&accel, &gyro, &mag);
     // filter sensor update();
   }
   if (slow.q()) {
