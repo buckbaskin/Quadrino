@@ -91,6 +91,9 @@ void loop() {
     printVec(&gyro); Serial.println("");
     printVec(&mag); Serial.println("");
     delay(10000);
+  } else if (counter >= 1) {
+    Serial.println("Counter...");
+    delay(10000);
   }
 }
 
