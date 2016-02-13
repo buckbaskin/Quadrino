@@ -9,6 +9,8 @@ Rate control_rate(50.0); // rate to update control feedback, probably won't make
 
 short counter = 0;
 
+bool was_nan = false;
+
 Vector3 accel;
 Vector3 gyro;
 Vector3 mag;
@@ -27,7 +29,7 @@ void evolve_particle(RotMatrix * particle, Vector3 ctrl, float dt);
 void motion_model(RotMatrix* particles, int num_particles, Vector3 ctrl, float dt);
 void update_control(RotMatrix* particles, int num_particles, float dt);
 void filter_particles(RotMatrix* particles, int particle_count);
-void publish_particles();
+bool publish_particles();
 float randomly(float mu, float sigma);
 Vector3 cross_product(Vector3 a, Vector3 b) {
   Vector3 bob;
@@ -69,7 +71,7 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (control_rate.q()) {
+  if (!was_nan && counter < 1 && control_rate.q()) {
     counter++;
     if (counter % 2) {
       digitalWrite(13, LOW);
@@ -82,7 +84,13 @@ void loop() {
     motion_model((RotMatrix*) particles, particle_count, gyro, 1.0/control_rate.hz());
     filter_particles((RotMatrix*) particles, particle_count);
     update_control((RotMatrix*) particles, particle_count, 1.0/control_rate.hz());
-    publish_particles();
+    was_nan = publish_particles();
+  } else if (was_nan) {
+    Serial.println("Nan though");
+    printVec(&accel); Serial.println("");
+    printVec(&gyro); Serial.println("");
+    printVec(&mag); Serial.println("");
+    delay(10000);
   }
 }
 
@@ -191,21 +199,32 @@ void filter_particles(RotMatrix* particles, int particle_count) {
   // TODO(buckbaskin): check particles match against mag-level?
 }
 
-void publish_particles() {
+bool publish_particles() {
   RotMatrix avg;
+  bool response = false;
   for (int i = 0; i < particle_count; i++) {
     avg[0][0] += *(particles+i)[0][0]+0.0;
+    response = response || (avg[0][0] != avg[0][0]); // Nan check
     avg[0][1] += *(particles+i)[0][1]+0.0;
+    response = response || (avg[0][1] != avg[0][1]); // Nan check
     avg[0][2] += *(particles+i)[0][2]+0.0;
+    response = response || (avg[0][2] != avg[0][2]); // Nan check
     avg[1][0] += *(particles+i)[1][0]+0.0;
+    response = response || (avg[1][0] != avg[1][0]); // Nan check
     avg[1][1] += *(particles+i)[1][1]+0.0;
+    response = response || (avg[1][1] != avg[1][1]); // Nan check
     avg[1][2] += *(particles+i)[1][2]+0.0;
+    response = response || (avg[1][2] != avg[1][2]); // Nan check
     avg[2][0] += *(particles+i)[2][0]+0.0;
+    response = response || (avg[2][0] != avg[2][0]); // Nan check
     avg[2][1] += *(particles+i)[2][1]+0.0;
+    response = response || (avg[2][1] != avg[2][1]); // Nan check
     avg[2][2] += *(particles+i)[2][2]+0.0;
+    response = response || (avg[2][2] != avg[2][2]); // Nan check
   }
   for (int i = 0; i < 9; i++) {
     Serial.print(avg[i/3][i%3]); Serial.print(",");
   }
   Serial.println("");
+  return response;
 }
