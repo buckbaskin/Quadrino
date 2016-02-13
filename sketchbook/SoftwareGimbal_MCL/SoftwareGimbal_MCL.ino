@@ -150,6 +150,9 @@ void filter_particles(RotMatrix* particles, int particle_count) {
   float dist;
   float min_dist = 10000000;
   short min_dist_index = -1;
+
+  Vector3 grav, thrust;
+  
   // check particles match against accel-level
   for (int i = 0; i < particle_count; i++) {
     // calc grav, thrust vectors
@@ -163,6 +166,15 @@ void filter_particles(RotMatrix* particles, int particle_count) {
   avg_dist = avg_dist / (float) particle_count;
   for (int i = 0; i < particle_count; i++) {
     // calc grav, thrust vectors again
+    // Thrust is parallel to the existing z axis
+    thrust.x = *(particles+i)[2][0];
+    thrust.y = *(particles+i)[2][1];
+    thrust.z = *(particles+i)[2][2];
+    // Grav is parallel to the origin z axis (aka transpose of thrust)
+    grav.x = *(particles+i)[0][2];
+    grav.y = *(particles+i)[1][2];
+    grav.z = *(particles+i)[2][2];
+    
     dist = abs(dot_product(accel, unit(cross_product(grav, thrust))));
     if (dist > avg_dist) { // replace with the best option
       *(particles+i)[0][0] = *(particles+min_dist_index)[0][0]+0.0;
@@ -193,7 +205,7 @@ void publish_particles() {
     avg[2][2] += *(particles+i)[2][2]+0.0;
   }
   for (int i = 0; i < 9; i++) {
-    Serial.print(avg[i]); Serial.print(",");
+    Serial.print(avg[i/3][i%3]); Serial.print(",");
   }
   Serial.println("");
 }
