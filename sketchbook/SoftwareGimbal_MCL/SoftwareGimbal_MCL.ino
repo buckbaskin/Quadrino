@@ -4,7 +4,6 @@
 #include "IMU.h"
 #include <math.h>
 
-Rate imu_rate(10.0); // rate to poll IMU, hopefully will make this
 Rate control_rate(50.0); // rate to update control feedback, probably won't make 100hz
 
 short counter = 0;
@@ -58,7 +57,9 @@ void setup() {
   /* Initialise the sensors */
   init_sensors(false);
 
-  init_MCL_particles((RotMatrix*) particles, particle_count);
+  init_MCL_particles(particles, particle_count);
+  publish_particles();
+  counter = 500;
 
   calc_bias(&accel_bias, &gyro_bias, &mag_bias);
   printVec(&accel_bias);
@@ -106,11 +107,11 @@ void motion_model(RotMatrix* particles, int num_particles, Vector3 ctrl, float d
 void evolve_particle(RotMatrix * particle, Vector3 ctrl, float dt) {
   RotMatrix temp;
   ctrl.x *= dt;
-  ctrl.x += randomly(0.0, ctrl.x+.05);
+  // ctrl.x += randomly(0.0, ctrl.x+.05);
   ctrl.y *= dt;
-  ctrl.y += randomly(0.0, ctrl.y+.05);
+  // ctrl.y += randomly(0.0, ctrl.y+.05);
   ctrl.z *= dt;
-  ctrl.z += randomly(0.0, ctrl.z+.05);
+  // ctrl.z += randomly(0.0, ctrl.z+.05);
   temp[0][0] = cos(ctrl.z)*cos(ctrl.y);
   temp[0][1] = sin(ctrl.z)*cos(ctrl.y);
   temp[0][2] = -sin(ctrl.y);
@@ -123,17 +124,17 @@ void evolve_particle(RotMatrix * particle, Vector3 ctrl, float dt) {
   Matrix.Multiply((float*) temp, (float*) *particle, 3,3,3, (float*) *particle);
 }
 
-void init_MCL_particles(RotMatrix * particles, int num_particles) {
+void init_MCL_particles(RotMatrix particles[], int num_particles) {
   for (int i = 0; i < num_particles; i++) {
-    (*(particles+i))[0][0] = 1;
-    (*(particles+i))[0][1] = 0;
-    (*(particles+i))[0][2] = 0;
-    (*(particles+i))[1][0] = 0;
-    (*(particles+i))[1][1] = 1;
-    (*(particles+i))[1][2] = 0;
-    (*(particles+i))[2][0] = 0;
-    (*(particles+i))[2][1] = 0;
-    (*(particles+i))[2][2] = 1;
+    (particles[i])[0][0] = 1;
+    (particles[i])[0][1] = 0;
+    (particles[i])[0][2] = 0;
+    (particles[i])[1][0] = 0;
+    (particles[i])[1][1] = 1;
+    (particles[i])[1][2] = 0;
+    (particles[i])[2][0] = 0;
+    (particles[i])[2][1] = 0;
+    (particles[i])[2][2] = 1;
   }
 }
 
@@ -143,6 +144,7 @@ void update_control(RotMatrix* particles, int num_particles, float dt) {
 }
 
 float randomly(float mu, float sigma) {
+  // it actually checks out pretty well, except the first number is always 0
   float u1 = ((float) random(0,1000))/(1000.0);
   float u2 = ((float) random(0,1000))/(1000.0);
   if (u1 > u2) {
@@ -167,6 +169,15 @@ void filter_particles(RotMatrix* particles, int particle_count) {
   // check particles match against accel-level
   for (int i = 0; i < particle_count; i++) {
     // calc grav, thrust vectors
+    // Thrust is parallel to the existing z axis
+    thrust.x = *(particles+i)[2][0];
+    thrust.y = *(particles+i)[2][1];
+    thrust.z = *(particles+i)[2][2];
+    // Grav is parallel to the origin z axis (aka transpose of thrust)
+    grav.x = *(particles+i)[0][2];
+    grav.y = *(particles+i)[1][2];
+    grav.z = *(particles+i)[2][2];
+    
     dist = abs(dot_product(accel, unit(cross_product(grav, thrust))));
     avg_dist += dist;
     if (min_dist_index == -1 || dist < min_dist) {
@@ -203,30 +214,34 @@ void filter_particles(RotMatrix* particles, int particle_count) {
 }
 
 bool publish_particles() {
+  Serial.println("publish particles");
   RotMatrix avg;
   bool response = false;
   for (int i = 0; i < particle_count; i++) {
-    avg[0][0] += *(particles+i)[0][0]+0.0;
+    avg[0][0] += particles[i][0][0]+0.0;
+    Serial.print("avg[0][0] "); Serial.println(avg[0][0]);
     response = response || (avg[0][0] != avg[0][0]); // Nan check
-    avg[0][1] += *(particles+i)[0][1]+0.0;
+    avg[0][1] += particles[i][0][1]+0.0;
     response = response || (avg[0][1] != avg[0][1]); // Nan check
-    avg[0][2] += *(particles+i)[0][2]+0.0;
+    avg[0][2] += particles[i][0][2]+0.0;
     response = response || (avg[0][2] != avg[0][2]); // Nan check
-    avg[1][0] += *(particles+i)[1][0]+0.0;
+    avg[1][0] += particles[i][1][0]+0.0;
     response = response || (avg[1][0] != avg[1][0]); // Nan check
-    avg[1][1] += *(particles+i)[1][1]+0.0;
+    avg[1][1] += particles[i][1][1]+0.0;
     response = response || (avg[1][1] != avg[1][1]); // Nan check
-    avg[1][2] += *(particles+i)[1][2]+0.0;
+    avg[1][2] += particles[i][1][2]+0.0;
     response = response || (avg[1][2] != avg[1][2]); // Nan check
-    avg[2][0] += *(particles+i)[2][0]+0.0;
+    avg[2][0] += particles[i][2][0]+0.0;
     response = response || (avg[2][0] != avg[2][0]); // Nan check
-    avg[2][1] += *(particles+i)[2][1]+0.0;
+    avg[2][1] += particles[i][2][1]+0.0;
     response = response || (avg[2][1] != avg[2][1]); // Nan check
-    avg[2][2] += *(particles+i)[2][2]+0.0;
+    avg[2][2] += particles[i][2][2]+0.0;
     response = response || (avg[2][2] != avg[2][2]); // Nan check
   }
-  for (int i = 0; i < 9; i++) {
-    Serial.print(avg[i/3][i%3]); Serial.print(",");
+  for (int i = 0; i < 3; i++) {
+    for (int j = 0; j < 3; j++) {
+    Serial.print(avg[i][j]/10.0); Serial.print(",");      
+    }
   }
   Serial.println("");
   return response;
