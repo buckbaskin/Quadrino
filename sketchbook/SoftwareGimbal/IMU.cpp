@@ -19,16 +19,18 @@ void init_sensors()
   }
 }
 
-void poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag) {
-  accel -> x = 0;
+int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag) {
+  accel -> x = !(accel -> x);
   accel -> y = 0;
   accel -> z = 0;
   gyro -> x = 0;
-  gyro -> y = 0;
+  gyro -> y = !(gyro -> y);
   gyro -> z = 0;
   mag -> x = 0;
   mag -> y = 0;
-  mag -> z = 0;
+  mag -> z = !(mag -> z);
+
+  return 1;
 }
 
 extern Adafruit_9DOF dof;

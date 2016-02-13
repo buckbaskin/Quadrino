@@ -10,6 +10,6 @@
 #include <Adafruit_9DOF.h>
 
 void init_sensors();
-void poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag);
+int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag);
 
 #endif

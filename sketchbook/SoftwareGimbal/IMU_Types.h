@@ -1,6 +1,8 @@
 #ifndef IMU_TYPES_H
 #define IMU_TYPES_H
 
+#include "Arduino.h"
+
 struct Vector3 {
   float x;
   float y;
@@ -8,5 +10,7 @@ struct Vector3 {
 };
 
 typedef struct Vector3  Vector3;
+
+void printVec(Vector3 * input);
 
 #endif
