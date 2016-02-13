@@ -4,7 +4,7 @@
 #include "IMU.h"
 
 // Rate slow(1.0); // do something on a slow count
-Rate imu_rate(1.0); // rate to poll IMU, hopefully will make this
+Rate imu_rate(5.0); // rate to poll IMU, hopefully will make this
 // Rate control_rate(100.0); // rate to update control feedback, probably won't make 100hz
 
 int _pin = 13;
@@ -39,22 +39,16 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (false && imu_rate.sleep()) {
+  if (imu_rate.q()) {
     counter++;
     if (counter % 2) {
       digitalWrite(_pin, LOW);
     } else {
+      Serial.print(imu_rate.expectedCycleTime());
+      Serial.println(" millis per");
       digitalWrite(_pin, HIGH);
     }
     poll_imu(&accel, &gyro, &mag);
-    //printVec(&accel);
-    //Serial.print(" m/s2 |");
-    //printVec(&gyro);
-    //Serial.print(" rad/s |");
-    //printVec(&mag); 
-    //Serial.println(" uTesla");
-    // filter sensor update
-    delay(100);
   }
 }
 
