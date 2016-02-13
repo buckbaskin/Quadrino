@@ -47,7 +47,7 @@ void init_sensors()
     Serial.println("");
   }
 
-  if (true || !gyrou.begin()) { // ignore blocking call?
+  if (!gyrou.begin()) { // ignore blocking call?
     meme++;
     /* There was a problem detecting the L3GD20 ... check your connections */
     Serial.println("No L3GD20 detected by default ... (maybe) Check your wiring!");
