@@ -9,7 +9,7 @@
 #include <Adafruit_L3GD20_U.h>
 #include <Adafruit_9DOF.h>
 
-void init_sensors();
+void init_sensors(bool debug);
 int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag);
 
 #endif

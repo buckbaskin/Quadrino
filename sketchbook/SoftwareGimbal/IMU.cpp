@@ -6,8 +6,11 @@ Adafruit_LSM303_Accel_Unified accelu = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   magu   = Adafruit_LSM303_Mag_Unified(30302);
 Adafruit_L3GD20_Unified       gyrou  = Adafruit_L3GD20_Unified(20);
 
+Vector3 accel_bias;
+Vector3 gyro_bias;
+Vector3 mag_bias;
 
-void init_sensors()
+void init_sensors(bool debug)
 {
   gyrou.enableAutoRange(true);
   
@@ -17,7 +20,7 @@ void init_sensors()
     meme++;
     /* There was a problem detecting the LSM303 ... check your connections */
     Serial.println("No LSM303-accel detected ... Check your wiring!");
-  } else {
+  } else if (debug) {
     accelu.getSensor(&sensor);
     Serial.println("------------------------------------");
     Serial.print  ("Sensor:       "); Serial.println(sensor.name);
@@ -34,7 +37,7 @@ void init_sensors()
     meme++;
     /* There was a problem detecting the LSM303 ... check your connections */
     Serial.println("No LSM303-mag detected ... Check your wiring!");
-  } else {
+  } else if (debug) {
     magu.getSensor(&sensor);
     Serial.println("------------------------------------");
     Serial.print  ("Sensor:       "); Serial.println(sensor.name);
@@ -51,7 +54,7 @@ void init_sensors()
     meme++;
     /* There was a problem detecting the L3GD20 ... check your connections */
     Serial.println("No L3GD20 detected by default ... (maybe) Check your wiring!");
-  } else {
+  } else if (debug) {
     gyrou.getSensor(&sensor);
     Serial.println("------------------------------------");
     Serial.print  ("Sensor:       "); Serial.println(sensor.name);
@@ -75,16 +78,58 @@ void init_sensors()
 }
 
 int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag) {
-  accel -> x = !(accel -> x);
+  sensors_event_t event;
+  accelu.getEvent(&event);
+  accel -> x = event.acceleration.x;
+  accel -> y = event.acceleration.y;
+  accel -> z = event.acceleration.z;
+  gyrou.getEvent(&event);
+  gyro -> x = event.gyro.x;
+  gyro -> y = event.gyro.y;
+  gyro -> z = event.gyro.z;
+  magu.getEvent(&event);
+  mag -> x = event.magnetic.x;
+  mag -> y = event.magnetic.y;
+  mag -> z = event.magnetic.z;
+  return 1;
+}
+
+int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag) {
+  Serial.println("Hold still, checking for bias");
+  accel -> x = 0;
   accel -> y = 0;
   accel -> z = 0;
   gyro -> x = 0;
-  gyro -> y = !(gyro -> y);
+  gyro -> y = 0;
   gyro -> z = 0;
   mag -> x = 0;
   mag -> y = 0;
-  mag -> z = !(mag -> z);
-
+  mag -> z = 0;
+  for (int i = 0; i < 100; i++) {
+    accelu.getEvent(&event);
+    accel -> x += event.acceleration.x;
+    accel -> y += event.acceleration.y;
+    accel -> z += event.acceleration.z;
+    gyrou.getEvent(&event);
+    gyro -> x += event.gyro.x;
+    gyro -> y += event.gyro.y;
+    gyro -> z += event.gyro.z;
+    magu.getEvent(&event);
+    mag -> x += event.magnetic.x;
+    mag -> y += event.magnetic.y;
+    mag -> z += event.magnetic.z;
+    delay(100ms);
+  }
+  accel -> x = accel -> x / 100.0;
+  accel -> y = accel -> y / 100.0;
+  accel -> z = accel -> z / 100.0;
+  gyro -> x = gyro -> x / 100.0;
+  gyro -> y = gyro -> y / 100.0;
+  gyro -> z = gyro -> z / 100.0;
+  mag -> x = mag -> x / 100.0;
+  mag -> y = mag -> x / 100.0;
+  mag -> z = mag -> x / 100.0;
+  Serial.println("Done checking for bias");
   return 1;
 }
 
@@ -92,3 +137,7 @@ extern Adafruit_9DOF dof;
 extern Adafruit_LSM303_Accel_Unified accelu;
 extern Adafruit_LSM303_Mag_Unified magu;
 extern Adafruit_L3GD20_Unified gyrou;
+
+extern Vector3 accel_bias;
+extern Vector3 gyro_bias;
+extern Vector3 mag_bias;
