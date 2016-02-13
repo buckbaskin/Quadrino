@@ -10,12 +10,13 @@ struct Vector3 {
 };
 typedef struct Vector3  Vector3;
 
-struct RotMatrix {
-  Vector3 x;
-  Vector3 y;
-  Vector3 z;
-};
-typedef struct RotMatrix  RotMatrix;
+//struct RotMatrix {
+//  Vector3 x;
+//  Vector3 y;
+//  Vector3 z;
+//};
+
+typedef float RotMatrix[3][3];
 
 struct Measurement {
   Vector3 accel;
