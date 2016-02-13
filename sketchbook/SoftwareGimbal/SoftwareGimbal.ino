@@ -44,8 +44,6 @@ void loop() {
     if (counter % 2) {
       digitalWrite(_pin, LOW);
     } else {
-      Serial.print(imu_rate.expectedCycleTime());
-      Serial.println(" millis per");
       digitalWrite(_pin, HIGH);
     }
     poll_imu(&accel, &gyro, &mag);
