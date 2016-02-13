@@ -6,9 +6,9 @@ Adafruit_LSM303_Accel_Unified accelu = Adafruit_LSM303_Accel_Unified(30301);
 Adafruit_LSM303_Mag_Unified   magu   = Adafruit_LSM303_Mag_Unified(30302);
 Adafruit_L3GD20_Unified       gyrou  = Adafruit_L3GD20_Unified(20);
 
-Vector3 accel_bias;
-Vector3 gyro_bias;
-Vector3 mag_bias;
+//Vector3 accel_bias = {0,0,0};
+//Vector3 gyro_bias = {0,0,0};
+//Vector3 mag_bias = {0,0,0};
 
 void init_sensors(bool debug)
 {
@@ -105,7 +105,10 @@ int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag) {
   mag -> x = 0;
   mag -> y = 0;
   mag -> z = 0;
-  for (int i = 0; i < 100; i++) {
+
+  sensors_event_t event;
+  
+  for (int i = 0; i < 1000; i++) {
     accelu.getEvent(&event);
     accel -> x += event.acceleration.x;
     accel -> y += event.acceleration.y;
@@ -118,17 +121,20 @@ int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag) {
     mag -> x += event.magnetic.x;
     mag -> y += event.magnetic.y;
     mag -> z += event.magnetic.z;
-    delay(100ms);
+    if(i%100 == 0) {
+      Serial.println(10-i/100);
+    }
+    delay(5);
   }
-  accel -> x = accel -> x / 100.0;
-  accel -> y = accel -> y / 100.0;
-  accel -> z = accel -> z / 100.0;
-  gyro -> x = gyro -> x / 100.0;
-  gyro -> y = gyro -> y / 100.0;
-  gyro -> z = gyro -> z / 100.0;
-  mag -> x = mag -> x / 100.0;
-  mag -> y = mag -> x / 100.0;
-  mag -> z = mag -> x / 100.0;
+  accel -> x = accel -> x / 1000.0;
+  accel -> y = accel -> y / 1000.0;
+  accel -> z = accel -> z / 1000.0;
+  gyro -> x = gyro -> x / 1000.0;
+  gyro -> y = gyro -> y / 1000.0;
+  gyro -> z = gyro -> z / 1000.0;
+  mag -> x = mag -> x / 1000.0;
+  mag -> y = mag -> x / 1000.0;
+  mag -> z = mag -> x / 1000.0;
   Serial.println("Done checking for bias");
   return 1;
 }
@@ -138,6 +144,6 @@ extern Adafruit_LSM303_Accel_Unified accelu;
 extern Adafruit_LSM303_Mag_Unified magu;
 extern Adafruit_L3GD20_Unified gyrou;
 
-extern Vector3 accel_bias;
-extern Vector3 gyro_bias;
-extern Vector3 mag_bias;
+//extern Vector3 accel_bias;
+//extern Vector3 gyro_bias;
+//extern Vector3 mag_bias;

@@ -11,5 +11,6 @@
 
 void init_sensors(bool debug);
 int poll_imu(Vector3* accel, Vector3* gyro, Vector3* mag);
+int calc_bias(Vector3* accel, Vector3* gyro, Vector3* mag);
 
 #endif

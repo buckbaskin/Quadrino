@@ -14,6 +14,11 @@ Vector3 accel;
 Vector3 gyro;
 Vector3 mag;
 
+Vector3 accel_bias;
+Vector3 gyro_bias;
+Vector3 mag_bias;
+
+
 void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
@@ -24,17 +29,17 @@ void setup() {
   init_sensors(false);
 
   calc_bias(&accel_bias, &gyro_bias, &mag_bias);
-  printVec(&accel);
-  Serial.print(" m/s2 |");
-  printVec(&gyro);
-  Serial.print(" rad/s |");
-  printVec(&mag); 
-  Serial.println("");
+  printVec(&accel_bias);
+  Serial.print(" m/s2 | ");
+  printVec(&gyro_bias);
+  Serial.print(" rad/s | ");
+  printVec(&mag_bias); 
+  Serial.println(" uTesla");
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
-  if (imu_rate.sleep()) {
+  if (false && imu_rate.sleep()) {
     counter++;
     if (counter % 2) {
       digitalWrite(_pin, LOW);
@@ -47,7 +52,7 @@ void loop() {
     //printVec(&gyro);
     //Serial.print(" rad/s |");
     //printVec(&mag); 
-    //Serial.println("");
+    //Serial.println(" uTesla");
     // filter sensor update
     delay(100);
   }
